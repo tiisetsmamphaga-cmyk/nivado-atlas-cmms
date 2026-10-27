@@ -1,18 +1,24 @@
-# Nivado Atlas deployment
+# Nivado Atlas: free test setup
 
-Source and frontend deployment settings are prepared. Backend, PostgreSQL and storage still need provisioning. Login is not operational yet.
+Source: https://github.com/tiisetsmamphaga-cmyk/nivado-atlas-cmms
+Frontend: https://atlas-cmms.vercel.app
 
-## Vercel frontend
-Use this fork, branch main, Root Directory frontend. frontend/vercel.json supplies build settings. ATLAS_API_URL must be the actual Java backend HTTPS origin, without /api. The backend serves endpoints at its root. FRONTEND_URL is https://atlas-cmms.vercel.app.
+Vercel hosts `frontend`; Render Free hosts the Java API; a separate Supabase Free project holds PostgreSQL and the private `atlas-files` bucket. Atlas continues to use its own login and permissions.
 
-## Railway backend
-Create a PostgreSQL service named Postgres and an API service from this fork. Set API Root Directory /api and Config File /api/railway.json. Use the existing Dockerfile and target port 8080.
+## Backend
 
-Set DB_URL from the Postgres private host, port and database name; DB_USER and DB_PWD from Railway reference variables. Generate a strong JWT_SECRET_KEY privately. Set PUBLIC_FRONT_URL=https://atlas-cmms.vercel.app and PUBLIC_API_URL to the generated API HTTPS origin. Restrict ALLOWED_ORGANIZATION_ADMINS to the owner email before opening signup. Set STORAGE_TYPE=MINIO and configure persistent private object storage with its internal endpoint, bucket, credentials and public HTTPS endpoint. Never commit credentials.
+`render.yaml` provisions only a free web service. It creates no paid database, disk or MinIO server. The running service may also be provisioned directly through Render.
 
-Use ENABLE_CORS=true and SINGLE_INGRESS=false for separate frontend/backend hosts. Disable email-dependent features until SMTP is configured: INVITATION_VIA_EMAIL=false, ENABLE_EMAIL_NOTIFICATIONS=false, ENABLE_MAIL_HEALTH_CHECK=false. Set MAIL_RECIPIENTS to an empty value.
+Use Supabase session pooler port 5432 and `sslmode=require&currentSchema=atlas` in `DB_URL` (omit the `jdbc:postgresql://` prefix). Use the restricted `atlas_app` database role and its password. The `atlas` schema is not exposed through Supabase's Data API. Hibernate and Liquibase default to this schema.
 
-Check startup migrations and /health-check, then test signup, login, work-order persistence and attachment upload/retrieval. The upstream health endpoint only reports application liveness.
+Set backend-only `SUPABASE_SECRET_KEY` to a secret or legacy service_role key. Never place it in the frontend or source code. Set `SUPABASE_URL`, `SUPABASE_STORAGE_BUCKET=atlas-files`, `STORAGE_TYPE=SUPABASE`, and restrict `ALLOWED_ORGANIZATION_ADMINS` to the owner's email. The storage bucket must remain private; Atlas issues short-lived signed URLs after authorizing requests.
 
-## Licence
-Preserve the upstream licence and attribution. This fork does not bypass branding entitlements or advanced-feature checks.
+Set `PUBLIC_FRONT_URL` and `PUBLIC_HOME_URL` to the Vercel origin. `PUBLIC_API_URL` uses the Render external URL. Email notifications are disabled until SMTP is configured.
+
+## Frontend
+
+Set Vercel `ATLAS_API_URL` to the Render origin, without `/api`, then redeploy. Public runtime settings are generated during builds. No Supabase private credentials belong in Vercel's frontend environment.
+
+## Free-plan limits
+
+Render sleeps when idle, so startup can be slow and scheduled jobs do not run during sleep. Supabase may pause after inactivity; database and file quotas apply. This is a test setup; verify Java memory use, signup, login and uploads before relying on it. No paid upgrades are enabled automatically.
