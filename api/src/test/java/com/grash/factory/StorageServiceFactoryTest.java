@@ -4,6 +4,7 @@ import com.grash.model.enums.StorageType;
 import com.grash.service.GCPService;
 import com.grash.service.MinioService;
 import com.grash.service.StorageService;
+import com.grash.service.SupabaseStorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,11 +23,20 @@ class StorageServiceFactoryTest {
     @Mock
     private MinioService minioService;
 
+    @Mock
+    private SupabaseStorageService supabaseStorageService;
+
     @InjectMocks
     private StorageServiceFactory storageServiceFactory;
 
     private void setStorageType(StorageType storageType) {
         ReflectionTestUtils.setField(storageServiceFactory, "storageType", storageType);
+    }
+
+    @Test
+    void getStorageService_supabase_returnsSupabaseService() {
+        setStorageType(StorageType.SUPABASE);
+        assertSame(supabaseStorageService, storageServiceFactory.getStorageService());
     }
 
     @Test
