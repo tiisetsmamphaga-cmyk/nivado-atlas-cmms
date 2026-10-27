@@ -1,0 +1,133 @@
+# Atlas stack. Paid resources: review the Render cost estimate before Apply.
+# Registration is restricted to the owner email entered during setup.
+previews:
+  generation: 'off'
+services:
+- type: web
+  name: nivado-atlas-storage
+  runtime: image
+  region: frankfurt
+  plan: 0.5c-512mb
+  image:
+    url: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
+  dockerCommand: server /data --address :9000 --console-address 127.0.0.1:9001
+  healthCheckPath: /minio/health/live
+  disk:
+    name: atlas-attachments
+    mountPath: /data
+    sizeGB: 1
+  envVars:
+  - key: PORT
+    value: '9000'
+  - key: MINIO_BROWSER
+    value: 'off'
+  - key: MINIO_ROOT_USER
+    generateValue: true
+  - key: MINIO_ROOT_PASSWORD
+    generateValue: true
+- type: web
+  name: nivado-atlas-api
+  runtime: docker
+  region: frankfurt
+  plan: 0.5c-512mb
+  repo: https://github.com/tiisetsmamphaga-cmyk/nivado-atlas-cmms
+  branch: main
+  dockerfilePath: ./api/Dockerfile
+  dockerContext: ./api
+  dockerCommand: 'sh -c ''export DB_URL="${DB_HOST}:${DB_PORT}/${DB_NAME}"; export
+    PUBLIC_API_URL="$RENDER_EXTERNAL_URL"; exec java --add-opens=java.base/java.lang=ALL-UNNAMED
+    $JAVA_OPTS -jar /app/my-spring-boot-app.jar'' '
+  healthCheckPath: /health-check
+  autoDeployTrigger: commit
+  envVars:
+  - key: DB_HOST
+    fromDatabase:
+      name: nivado-atlas-db
+      property: host
+  - key: DB_PORT
+    fromDatabase:
+      name: nivado-atlas-db
+      property: port
+  - key: DB_NAME
+    fromDatabase:
+      name: nivado-atlas-db
+      property: database
+  - key: DB_USER
+    fromDatabase:
+      name: nivado-atlas-db
+      property: user
+  - key: DB_PWD
+    fromDatabase:
+      name: nivado-atlas-db
+      property: password
+  - key: JWT_SECRET_KEY
+    generateValue: true
+  - key: ALLOWED_ORGANIZATION_ADMINS
+    sync: false
+  - key: MINIO_ENDPOINT
+    fromService:
+      type: web
+      name: nivado-atlas-storage
+      envVarKey: RENDER_EXTERNAL_URL
+  - key: PUBLIC_MINIO_ENDPOINT
+    fromService:
+      type: web
+      name: nivado-atlas-storage
+      envVarKey: RENDER_EXTERNAL_URL
+  - key: MINIO_ACCESS_KEY
+    fromService:
+      type: web
+      name: nivado-atlas-storage
+      envVarKey: MINIO_ROOT_USER
+  - key: MINIO_SECRET_KEY
+    fromService:
+      type: web
+      name: nivado-atlas-storage
+      envVarKey: MINIO_ROOT_PASSWORD
+  - key: PORT
+    value: '8080'
+  - key: SERVER_PORT
+    value: '8080'
+  - key: PUBLIC_FRONT_URL
+    value: https://atlas-cmms.vercel.app
+  - key: PUBLIC_HOME_URL
+    value: https://atlas-cmms.com
+  - key: STORAGE_TYPE
+    value: MINIO
+  - key: MINIO_BUCKET
+    value: atlas-attachments
+  - key: ENABLE_CORS
+    value: 'true'
+  - key: SINGLE_INGRESS
+    value: 'false'
+  - key: INVITATION_VIA_EMAIL
+    value: 'false'
+  - key: ENABLE_EMAIL_NOTIFICATIONS
+    value: 'false'
+  - key: ENABLE_MAIL_HEALTH_CHECK
+    value: 'false'
+  - key: MAIL_RECIPIENTS
+    value: ''
+  - key: MAIL_TYPE
+    value: SMTP
+  - key: CLOUD_VERSION
+    value: 'false'
+  - key: ENABLE_SSO
+    value: 'false'
+  - key: LDAP_ENABLED
+    value: 'false'
+  - key: SPRING_PROFILES_ACTIVE
+    value: production
+  - key: JAVA_OPTS
+    value: -XX:MaxRAMPercentage=60.0 -XX:+ExitOnOutOfMemoryError
+  - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+    value: '5'
+databases:
+- name: nivado-atlas-db
+  region: frankfurt
+  plan: 0.1c-256mb
+  databaseName: atlas
+  user: atlas
+  postgresMajorVersion: '16'
+  diskSizeGB: 1
+  ipAllowList: []
