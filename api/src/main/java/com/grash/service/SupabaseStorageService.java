@@ -122,8 +122,13 @@ public class SupabaseStorageService implements StorageService {
 
     @Override
     public boolean exists(String filePath) {
-        HttpResponse<byte[]> response = request("HEAD", objectPath("/object", filePath), null, null);
+        HttpResponse<byte[]> response = request("GET", objectPath("/object/info", filePath), null, null);
         if (response.statusCode() == 404) return false;
+        if (response.statusCode() == 400) {
+            try {
+                if (json.readTree(response.body()).path("statusCode").asText().equals("404")) return false;
+            } catch (IOException ignored) { /* Preserve the upstream failure below. */ }
+        }
         success(response);
         return true;
     }
