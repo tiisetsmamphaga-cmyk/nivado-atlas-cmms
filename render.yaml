@@ -16,7 +16,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: JAVA_OPTS
-        value: "-Xms64m -Xmx280m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=32m -Xss256k -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError"
+        value: "-Xms64m -Xmx224m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=24m -XX:MaxDirectMemorySize=16m -XX:TieredStopAtLevel=1 -Xss256k -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError"
       - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
         value: "5"
       - key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
