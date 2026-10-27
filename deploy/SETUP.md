@@ -9,7 +9,7 @@ Vercel hosts `frontend`; Render Free hosts the Java API; a separate Supabase Fre
 
 `render.yaml` provisions only a free web service. It creates no paid database, disk or MinIO server. The running service may also be provisioned directly through Render.
 
-Use Supabase session pooler port 5432 and `sslmode=require&currentSchema=atlas` in `DB_URL` (omit the `jdbc:postgresql://` prefix). Use the restricted `atlas_app` database role and its password. The `atlas` schema is not exposed through Supabase's Data API. Hibernate and Liquibase default to this schema.
+Use Supabase session pooler port 5432 and `sslmode=require&currentSchema=atlas` in `DB_URL` (omit the `jdbc:postgresql://` prefix). Use the restricted `atlas_app` database role and its password. `JWT_SECRET_KEY` must be a standard Base64-encoded random key of at least 32 decoded bytes. The `atlas` schema is not exposed through Supabase's Data API. Hibernate and Liquibase default to this schema.
 
 Set backend-only `SUPABASE_SECRET_KEY` to a secret or legacy service_role key. Never place it in the frontend or source code. Set `SUPABASE_URL`, `SUPABASE_STORAGE_BUCKET=atlas-files`, `STORAGE_TYPE=SUPABASE`, and restrict `ALLOWED_ORGANIZATION_ADMINS` to the owner's email. The storage bucket must remain private; Atlas issues short-lived signed URLs after authorizing requests.
 
