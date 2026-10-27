@@ -31,8 +31,9 @@ services:
         sync: false
       - key: DB_PWD
         sync: false
+      # Standard Base64-encoded random key (at least 32 decoded bytes).
       - key: JWT_SECRET_KEY
-        generateValue: true
+        sync: false
       - key: PUBLIC_API_URL
         fromService:
           type: web
