@@ -31,6 +31,12 @@ public class ApplicationInitializer implements SmartInitializingSingleton {
     @Value("${cloud-version}")
     private boolean cloudVersion;
 
+    @Value("${ATLAS_SUPER_ADMIN_EMAIL:}")
+    private String bootstrapSuperAdminEmail;
+
+    @Value("${ATLAS_SUPER_ADMIN_PASSWORD:}")
+    private String bootstrapSuperAdminPassword;
+
     @Override
     public void afterSingletonsInstantiated() {
         log.info("Starting application initialization...");
@@ -58,6 +64,11 @@ public class ApplicationInitializer implements SmartInitializingSingleton {
     }
 
     private void initializeSuperAdmin() {
+        // Self-hosted owners register their own organization account. No default credentials.
+        if (bootstrapSuperAdminEmail.isBlank() || bootstrapSuperAdminPassword.isBlank()) {
+            log.info("Super admin bootstrap is not configured; skipping");
+            return;
+        }
         // Find or create the super admin role
         Role savedSuperAdminRole = roleService.findByCodeAndRoleType(RoleCode.ADMIN, RoleType.ROLE_SUPER_ADMIN)
                 .stream().findFirst().orElseGet(() -> {
@@ -142,11 +153,11 @@ public class ApplicationInitializer implements SmartInitializingSingleton {
 
 
     @NotNull
-    private static UserSignupRequest getSuperAdminSignupRequest(Role savedSuperAdminRole) {
+    private UserSignupRequest getSuperAdminSignupRequest(Role savedSuperAdminRole) {
         UserSignupRequest signupRequest = new UserSignupRequest();
         signupRequest.setRole(savedSuperAdminRole);
-        signupRequest.setEmail("superadmin@test.com");
-        signupRequest.setPassword("pls_change_me");
+        signupRequest.setEmail(bootstrapSuperAdminEmail);
+        signupRequest.setPassword(bootstrapSuperAdminPassword);
         signupRequest.setFirstName("Super");
         signupRequest.setLastName("Admin");
         signupRequest.setPhone("");
