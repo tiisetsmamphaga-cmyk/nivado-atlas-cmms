@@ -1,0 +1,6 @@
+{
+  "framework": "create-react-app",
+  "installCommand": "HUSKY=0 npm install --legacy-peer-deps",
+  "buildCommand": "node scripts/write-runtime-env.cjs && CI=false npm run build",
+  "outputDirectory": "build"
+}
