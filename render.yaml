@@ -10,8 +10,6 @@ services:
     dockerfilePath: ./api/Dockerfile
     dockerContext: ./api
     healthCheckPath: /health-check
-    dockerCommand: >-
-      sh -c 'export PUBLIC_API_URL="$RENDER_EXTERNAL_URL"; exec java --add-opens=java.base/java.lang=ALL-UNNAMED $JAVA_OPTS -jar /app/my-spring-boot-app.jar'
     envVars:
       - key: SERVER_PORT
         value: "10000"
@@ -35,6 +33,11 @@ services:
         sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
+      - key: PUBLIC_API_URL
+        fromService:
+          type: web
+          name: nivado-atlas-api
+          envVarKey: RENDER_EXTERNAL_URL
       - key: PUBLIC_FRONT_URL
         value: https://atlas-cmms.vercel.app
       - key: PUBLIC_HOME_URL
